@@ -1,52 +1,49 @@
+
+
 pipeline {
     agent any
 
     environment {
-        // CHANGE THIS to your Docker Hub username
-        DOCKER_IMAGE = "sharadhiram/myapp1" 
+        // Ensure this matches your Docker Hub username/repository
+        DOCKER_IMAGE = "sharadhiram/myapp1"
     }
 
     stages {
-        // We removed the 'Clone' stage because Jenkins does this automatically
-        
         stage('Build Docker Image') {
             steps {
-                script {
-                    // This builds the image using the Dockerfile in the current folder
-                    docker.build("${DOCKER_IMAGE}:latest")
-                }
+                // Using 'sh' (shell) to run standard Docker commands
+                sh "docker build -t ${DOCKER_IMAGE}:latest ."
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
+                // This pulls the 'dockerhub-creds' you created in Jenkins
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-creds',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    // Logs in using the environment variables from credentials
+                    sh "echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin"
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry('', 'dockerhub-creds') {
-                        docker.image("${DOCKER_IMAGE}:latest").push()
-                    }
-                }
+                // Pushes the finished image to your Hub
+                sh "docker push ${DOCKER_IMAGE}:latest"
             }
         }
     }
 
     post {
         success {
-            echo 'Image successfully built and pushed to Docker Hub'
+            echo 'SUCCESS: Image built and pushed to Docker Hub!'
         }
         failure {
-            echo 'Pipeline failed'
+            echo 'FAILED: Check the console output for errors.'
         }
     }
 }
