@@ -2,20 +2,17 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "sharadhiram/app-image"
+        // CHANGE THIS to your Docker Hub username
+        DOCKER_IMAGE = "sharadhiram/myapp1" 
     }
 
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/sharadhi27/docker_demo3'
-            }
-        }
-
+        // We removed the 'Clone' stage because Jenkins does this automatically
+        
         stage('Build Docker Image') {
             steps {
                 script {
+                    // This builds the image using the Dockerfile in the current folder
                     docker.build("${DOCKER_IMAGE}:latest")
                 }
             }
